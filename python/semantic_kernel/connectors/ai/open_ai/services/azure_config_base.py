@@ -77,12 +77,7 @@ class AzureOpenAIConfigBase(OpenAIHandler):
                     azure_ad_token_provider=ad_token_provider,
                     default_headers=merged_headers,
                 )
-            else:
-                if not endpoint:
-                    raise AIException(
-                        AIException.ErrorCodes.InvalidConfiguration,
-                        "Please provide either base_url or endpoint",
-                    )
+            elif endpoint:
                 async_client = AsyncAzureOpenAI(
                     azure_endpoint=endpoint,
                     azure_deployment=deployment_name,
@@ -93,6 +88,11 @@ class AzureOpenAIConfigBase(OpenAIHandler):
                     default_headers=merged_headers,
                 )
 
+            else:
+                raise AIException(
+                    AIException.ErrorCodes.InvalidConfiguration,
+                    "Please provide either base_url or endpoint",
+                )
         super().__init__(
             ai_model_id=deployment_name,
             log=log,

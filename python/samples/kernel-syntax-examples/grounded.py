@@ -94,8 +94,7 @@ def setup(use_azure: bool = False):
 def get_summary_text():
     summary_text = """My father, a respected resident of Milan, was a close friend of a merchant named Beaufort who, after a series of misfortunes, moved to Zurich in poverty. My father was upset by his friend's troubles and sought him out, finding him in a mean street. Beaufort had saved a small sum of money, but it was not enough to support him and his daughter, Mary. Mary procured work to eek out a living, but after ten months her father died, leaving her a beggar. My father came to her aid and two years later they married when they visited Rome."""  # noqa: E501
 
-    summary_text = summary_text.replace("\n", " ").replace("  ", " ")
-    return summary_text
+    return summary_text.replace("\n", " ").replace("  ", " ")
 
 
 async def run_entity_extraction(kernel, semantic_functions, summary_text):

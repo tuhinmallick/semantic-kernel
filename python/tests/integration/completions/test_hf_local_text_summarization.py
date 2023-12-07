@@ -20,7 +20,7 @@ async def test_summarize_input_str(setup_summarize_function):
 
     output = str(summary).strip()
     print(f"Summary using input string: '{output}'")
-    assert len(output) > 0
+    assert output != ""
 
 
 @pytest.mark.asyncio
@@ -39,7 +39,7 @@ async def test_summarize_input_vars(setup_summarize_function):
 
     output = str(summary).strip()
     print(f"Summary using context variables: '{output}'")
-    assert len(output) > 0
+    assert output != ""
 
 
 @pytest.mark.asyncio
@@ -59,7 +59,7 @@ async def test_summarize_input_context(setup_summarize_function):
 
     output = str(summary).strip()
     print(f"Summary using input context: '{output}'")
-    assert len(output) > 0
+    assert output != ""
 
 
 @pytest.mark.asyncio
@@ -82,7 +82,7 @@ async def test_summarize_input_context_with_vars(setup_summarize_function):
 
     output = str(summary).strip()
     print(f"Summary using context and additional variables: '{output}'")
-    assert len(output) > 0
+    assert output != ""
 
 
 @pytest.mark.asyncio
@@ -104,7 +104,7 @@ async def test_summarize_input_context_with_str(setup_summarize_function):
 
     output = str(summary).strip()
     print(f"Summary using context and additional string: '{output}'")
-    assert len(output) > 0
+    assert output != ""
 
 
 @pytest.mark.asyncio
@@ -132,4 +132,4 @@ async def test_summarize_input_context_with_vars_and_str(setup_summarize_functio
     print(
         f"Summary using context, additional variables, and additional string: '{output}'"
     )
-    assert len(output) > 0
+    assert output != ""

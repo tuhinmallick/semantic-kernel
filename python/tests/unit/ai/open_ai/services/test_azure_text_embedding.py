@@ -173,7 +173,7 @@ async def test_azure_text_embedding_calls_with_batches(mock_create) -> None:
     api_key = "test_api_key"
     api_version = "2023-03-15-preview"
     logger = Logger("test_logger")
-    texts = [i for i in range(0, 5)]
+    texts = list(range(0, 5))
 
     azure_text_embedding = AzureTextEmbedding(
         deployment_name=deployment_name,
@@ -187,10 +187,7 @@ async def test_azure_text_embedding_calls_with_batches(mock_create) -> None:
 
     mock_create.assert_has_awaits(
         [
-            call(
-                model=deployment_name,
-                input=texts[0:3],
-            ),
+            call(model=deployment_name, input=texts[:3]),
             call(
                 model=deployment_name,
                 input=texts[3:5],
