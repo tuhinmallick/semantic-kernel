@@ -80,7 +80,7 @@ class TextMemorySkill(SKBaseModel):
         limit = context.variables.get(
             TextMemorySkill.LIMIT_PARAM, TextMemorySkill.DEFAULT_LIMIT
         )
-        if limit is None or str(limit).strip() == "":
+        if limit is None or not str(limit).strip():
             raise ValueError("Limit value not defined for TextMemorySkill")
 
         results = await context.memory.search_async(
@@ -138,8 +138,7 @@ class TextMemorySkill(SKBaseModel):
         if not collection:
             raise ValueError("Memory collection not defined for TextMemorySkill")
 
-        key = context.variables.get(TextMemorySkill.KEY_PARAM, None)
-        if not key:
+        if key := context.variables.get(TextMemorySkill.KEY_PARAM, None):
+            await context.memory.save_information_async(collection, text=text, id=key)
+        else:
             raise ValueError("Memory key not defined for TextMemorySkill")
-
-        await context.memory.save_information_async(collection, text=text, id=key)

@@ -204,14 +204,12 @@ class Kernel:
                         new_vars=context.variables, overwrite=False
                     )
 
-            # if the user did not pass in a context, prioritize an input string,
-            # and merge that with input context variables
             else:
                 if input_str is not None and input_vars is None:
                     variables = ContextVariables(input_str)
                 elif input_str is None and input_vars is not None:
                     variables = input_vars
-                elif input_str is not None and input_vars is not None:
+                elif input_str is not None:
                     variables = ContextVariables(input_str)
                     variables = variables.merge_or_overwrite(
                         new_vars=input_vars, overwrite=False
@@ -268,14 +266,12 @@ class Kernel:
                     new_vars=context.variables, overwrite=False
                 )
 
-        # if the user did not pass in a context, prioritize an input string,
-        # and merge that with input context variables
         else:
             if input_str is not None and input_vars is None:
                 variables = ContextVariables(input_str)
             elif input_str is None and input_vars is not None:
                 variables = input_vars
-            elif input_str is not None and input_vars is not None:
+            elif input_str is not None:
                 variables = ContextVariables(input_str)
                 variables = variables.merge_or_overwrite(
                     new_vars=input_vars, overwrite=False
@@ -289,8 +285,7 @@ class Kernel:
                 self._log,
             )
 
-        pipeline_step = 0
-        for func in functions:
+        for pipeline_step, func in enumerate(functions):
             while True:
                 assert isinstance(func, SKFunctionBase), (
                     "All func arguments to Kernel.run*(inputs, func1, func2, ...) "
@@ -356,17 +351,18 @@ class Kernel:
                         )
                         return context
                     if (
-                        isinstance(function_invoked_args, FunctionInvokedEventArgs)
-                        and function_invoked_args.is_repeat_requested
-                    ):
-                        repeat_message = "Execution was repeated on function invoked event of pipeline step"
-                        self._log.info(
-                            f"{repeat_message} {pipeline_step}: {func.skill_name}.{func.name}."
+                        not isinstance(
+                            function_invoked_args, FunctionInvokedEventArgs
                         )
-                        continue
-                    else:
+                        or not function_invoked_args.is_repeat_requested
+                    ):
                         break
 
+                    repeat_message = "Execution was repeated on function invoked event of pipeline step"
+                    self._log.info(
+                        f"{repeat_message} {pipeline_step}: {func.skill_name}.{func.name}."
+                    )
+                    continue
                 except Exception as ex:
                     self._log.error(
                         f"Something went wrong in pipeline step {pipeline_step}. "
@@ -375,8 +371,6 @@ class Kernel:
                     )
                     context.fail(str(ex), ex)
                     return context
-
-            pipeline_step += 1
 
         return context
 
@@ -396,11 +390,13 @@ class Kernel:
             if not service_id:
                 raise ValueError("The embedding service id cannot be `None` or empty")
 
-            embeddings_service = self.get_ai_service(EmbeddingGeneratorBase, service_id)
-            if not embeddings_service:
-                raise ValueError(f"AI configuration is missing for: {service_id}")
+            if embeddings_service := self.get_ai_service(
+                EmbeddingGeneratorBase, service_id
+            ):
+                embeddings_generator = embeddings_service(self)
 
-            embeddings_generator = embeddings_service(self)
+            else:
+                raise ValueError(f"AI configuration is missing for: {service_id}")
 
         if storage is None:
             raise ValueError("The storage instance provided cannot be `None`")
@@ -448,7 +444,7 @@ class Kernel:
     def import_skill(
         self, skill_instance: Any, skill_name: str = ""
     ) -> Dict[str, SKFunctionBase]:
-        if skill_name.strip() == "":
+        if not skill_name.strip():
             skill_name = SkillCollection.GLOBAL_SKILL
             self._log.debug(f"Importing skill {skill_name} into the global namespace")
         else:
@@ -461,15 +457,11 @@ class Kernel:
         else:
             candidates = inspect.getmembers(skill_instance, inspect.ismethod)
         # Read every method from the skill instance
-        for _, candidate in candidates:
-            # If the method is a semantic function, register it
-            if not hasattr(candidate, "__sk_function__"):
-                continue
-
-            functions.append(
-                SKFunction.from_native_method(candidate, skill_name, self.logger)
-            )
-
+        functions.extend(
+            SKFunction.from_native_method(candidate, skill_name, self.logger)
+            for _, candidate in candidates
+            if hasattr(candidate, "__sk_function__")
+        )
         self.logger.debug(f"Methods imported: {len(functions)}")
 
         # Uniqueness check on function names
@@ -727,7 +719,7 @@ class Kernel:
         function_config: SemanticFunctionConfig,
     ) -> SKFunctionBase:
         function_type = function_config.prompt_template_config.type
-        if not function_type == "completion":
+        if function_type != "completion":
             raise AIException(
                 AIException.ErrorCodes.FunctionTypeNotSupported,
                 f"Function type not supported: {function_type}",
@@ -821,15 +813,14 @@ class Kernel:
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
-        class_name = next(
+        if class_name := next(
             (
                 name
                 for name, cls in inspect.getmembers(module, inspect.isclass)
                 if cls.__module__ == MODULE_NAME
             ),
             None,
-        )
-        if class_name:
+        ):
             skill_obj = getattr(module, class_name)()
             return self.import_skill(skill_obj, skill_name)
 
@@ -851,7 +842,7 @@ class Kernel:
 
         skill = {}
 
-        directories = glob.glob(skill_directory + "/*/")
+        directories = glob.glob(f"{skill_directory}/*/")
         for directory in directories:
             dir_name = os.path.dirname(directory)
             function_name = os.path.basename(dir_name)

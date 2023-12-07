@@ -71,21 +71,20 @@ class AzureCosmosDBMemoryStore(MemoryStoreBase):
         """Creates the underlying data store based on the API definition"""
         # Right now this only supports Mongo, but set up to support more later.
         apiStore: AzureCosmosDBStoreApi = None
-        if cosmos_api == "mongo-vcore":
-            mongodb_client, database = get_mongodb_resources(
-                cosmos_connstr, database_name
-            )
-            apiStore = MongoStoreApi(
-                collection_name,
-                index_name,
-                vector_dimensions,
-                num_lists,
-                similarity,
-                database,
-            )
-        else:
+        if cosmos_api != "mongo-vcore":
             raise NotImplementedError
 
+        mongodb_client, database = get_mongodb_resources(
+            cosmos_connstr, database_name
+        )
+        apiStore = MongoStoreApi(
+            collection_name,
+            index_name,
+            vector_dimensions,
+            num_lists,
+            similarity,
+            database,
+        )
         store = AzureCosmosDBMemoryStore(
             apiStore,
             database_name,

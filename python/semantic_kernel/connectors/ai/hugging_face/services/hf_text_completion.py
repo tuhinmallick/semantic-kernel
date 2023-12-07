@@ -92,20 +92,12 @@ class HuggingFaceTextCompletion(TextCompletionClientBase, AIServiceClientBase):
                 generation_config=generation_config,
             )
 
-            completions = list()
+            completions = []
             if self.task == "summarization":
-                for response in results:
-                    completions.append(response["summary_text"])
-                if len(completions) == 1:
-                    return completions[0]
-                return completions
-
-            for response in results:
-                completions.append(response["generated_text"])
-            if len(completions) == 1:
-                return completions[0]
-            return completions
-
+                completions.extend(response["summary_text"] for response in results)
+                return completions[0] if len(completions) == 1 else completions
+            completions.extend(response["generated_text"] for response in results)
+            return completions[0] if len(completions) == 1 else completions
         except Exception as e:
             raise AIException("Hugging Face completion failed", e)
 

@@ -25,6 +25,4 @@ class AIServiceClientBase(SKBaseModel, ABC):
     @field_validator("log")
     @classmethod
     def validate_log(cls, v):
-        if v is None:
-            return NullLogger()
-        return v
+        return NullLogger() if v is None else v

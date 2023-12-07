@@ -80,7 +80,7 @@ def memory_record3():
 
 
 async def azurecosmosdb_memorystore() -> MemoryStoreBase:
-    store = await AzureCosmosDBMemoryStore.create(
+    return await AzureCosmosDBMemoryStore.create(
         database_name=database_name,
         collection_name=collection_name,
         index_name=index_name,
@@ -88,7 +88,6 @@ async def azurecosmosdb_memorystore() -> MemoryStoreBase:
         num_lists=num_lists,
         similarity=similarity,
     )
-    return store
 
 
 @pytest.mark.asyncio

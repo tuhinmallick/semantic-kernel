@@ -196,10 +196,7 @@ class MongoStoreApi(AzureCosmosDBStoreApi):
             limit=1,
         )
 
-        if len(nearest_results) > 0:
-            return nearest_results[0]
-        else:
-            return None
+        return nearest_results[0] if len(nearest_results) > 0 else None
 
     @staticmethod
     def __serialize_metadata(record: MemoryRecord) -> str:
